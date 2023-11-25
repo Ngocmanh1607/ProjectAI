@@ -1,21 +1,27 @@
 from copy import deepcopy
 
-TIME_OUT = 1800
+TIME_OUT = 1800  # Đặt thời gian tối đa cho quá trình tìm kiếm là 1800 giây.
+
+# Lớp định nghĩa trạng thái trong game.
 
 
 class state:
     def __init__(self, board, state_parent, list_check_point):
+        # Khởi tạo trạng thái với bảng game, trạng thái cha và danh sách điểm kiểm tra.
         self.board = board
         self.state_parent = state_parent
-        self.cost = 1
-        self.heuristic = 0
+        self.cost = 1  # Chi phí mặc định cho mỗi bước di chuyển là 1.
+        self.heuristic = 0  # Giá trị heuristic ban đầu là 0.
+        # Sao chép danh sách điểm kiểm tra.
         self.check_points = deepcopy(list_check_point)
 
+    # Phương thức lấy toàn bộ chuỗi các trạng thái dẫn đến trạng thái hiện tại.
     def get_line(self):
         if self.state_parent is None:
             return [self.board]
         return (self.state_parent).get_line() + [self.board]
 
+    # Tính toán giá trị heuristic cho trạng thái.
     def compute_heuristic(self):
         list_boxes = find_boxes_position(self.board)
         if self.heuristic == 0:
@@ -24,17 +30,15 @@ class state:
                     [0] - self.check_points[i][1] for i in range(len(list_boxes))))
         return self.heuristic
 
+    # Định nghĩa phép so sánh lớn hơn giữa các trạng thái dựa trên heuristic.
     def __gt__(self, other):
-        if self.compute_heuristic() > other.compute_heuristic():
-            return True
-        else:
-            return False
+        return self.compute_heuristic() > other.compute_heuristic()
 
+    # Định nghĩa phép so sánh nhỏ hơn giữa các trạng thái dựa trên heuristic.
     def __lt__(self, other):
-        if self.compute_heuristic() < other.compute_heuristic():
-            return True
-        else:
-            return False
+        return self.compute_heuristic() < other.compute_heuristic()
+
+# Kiểm tra xem bảng game đã đạt đến trạng thái chiến thắng chưa.
 
 
 def check_win(board, list_check_point):
@@ -43,9 +47,13 @@ def check_win(board, list_check_point):
             return False
     return True
 
+# Hàm tạo bản sao của bảng game.
+
 
 def assign_matrix(board):
     return [[board[x][y] for y in range(len(board[0]))] for x in range(len(board))]
+
+# Tìm vị trí của người chơi trên bảng game.
 
 
 def find_position_player(board):
@@ -53,7 +61,9 @@ def find_position_player(board):
         for y in range(len(board[0])):
             if board[x][y] == 'p':
                 return (x, y)
-    return (-1, -1)  # error board
+    return (-1, -1)  # Trả về (-1, -1) nếu không tìm thấy người chơi.
+
+# So sánh hai bảng game với nhau.
 
 
 def compare_matrix(board_A, board_B):
@@ -65,6 +75,8 @@ def compare_matrix(board_A, board_B):
                 return False
     return True
 
+# Kiểm tra xem một bảng game đã tồn tại trong danh sách các trạng thái hay chưa.
+
 
 def is_board_exist(board, list_state):
     for state in list_state:
@@ -72,12 +84,16 @@ def is_board_exist(board, list_state):
             return True
     return False
 
+# Kiểm tra xem một hộp có nằm trên điểm kiểm tra không.
+
 
 def is_box_on_check_point(box, list_check_point):
     for check_point in list_check_point:
         if box[0] == check_point[0] and box[1] == check_point[1]:
             return True
     return False
+
+# Kiểm tra xem một hộp có bị kẹt ở góc của bức tường hay không.
 
 
 def check_in_corner(board, x, y, list_check_point):
@@ -100,6 +116,8 @@ def check_in_corner(board, x, y, list_check_point):
                 return True
     return False
 
+# Tìm vị trí của tất cả các hộp trên bảng.
+
 
 def find_boxes_position(board):
     result = []
@@ -109,8 +127,13 @@ def find_boxes_position(board):
                 result.append((i, j))
     return result
 
+# Kiểm tra xem một hộp có thể di chuyển được không.
+
 
 def is_box_can_be_moved(board, box_position):
+    # Xác định các hướng di chuyển có thể từ vị trí hộp hiện tại.
+    # ...
+    # Nếu có ít nhất một hướng di chuyển hợp lệ, trả về True. Ngược lại, trả về False.
     left_move = (box_position[0], box_position[1] - 1)
     right_move = (box_position[0], box_position[1] + 1)
     up_move = (box_position[0] - 1, box_position[1])
@@ -126,6 +149,7 @@ def is_box_can_be_moved(board, box_position):
     return False
 
 
+# Kiểm tra xem tất cả các hộp có bị kẹt không.
 def is_all_boxes_stuck(board, list_check_point):
     box_positions = find_boxes_position(board)
     result = True
@@ -136,6 +160,8 @@ def is_all_boxes_stuck(board, list_check_point):
             result = False
     return result
 
+# Kiểm tra xem bảng game có còn khả năng chiến thắng không.
+
 
 def is_board_can_not_win(board, list_check_point):
     '''return true if box in corner of wall -> can't win'''
@@ -145,6 +171,8 @@ def is_board_can_not_win(board, list_check_point):
                 if check_in_corner(board, x, y, list_check_point):
                     return True
     return False
+
+# Lấy danh sách các vị trí mà người chơi có thể di chuyển đến từ vị trí hiện tại.
 
 
 def get_next_pos(board, cur_pos):

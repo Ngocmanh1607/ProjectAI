@@ -4,10 +4,9 @@ from copy import deepcopy
 import pygame
 from pygame.constants import KEYDOWN
 import astar
-
-''' TIME OUT FOR ALL ALGORITHM : 30 MIN ~ 1800 SECONDS '''
+import DFS
 TIME_OUT = 1800
-''' GET THE TESTCASES AND CHECKPOINTS PATH FOLDERS '''
+
 path_board = os.getcwd() + '/Testcases'
 path_checkpoint = os.getcwd() + '/Checkpoints'
 assets_path = os.getcwd() + '/images'
@@ -47,9 +46,6 @@ def get_board(path):
     filepath = f"{path}"
     result = np.loadtxt(filepath, dtype=str, delimiter=',')
     return result
-
-
-''' READ A SINGLE CHECKPOINT TXT FILE '''
 
 
 def get_pair(path):
@@ -114,12 +110,74 @@ def renderMap(board):
 # Map level
 mapNumber = 0
 # Algorithm to solve the game
-algorithm = "A STAR"
+algorithm = "Depth First Search"
 
 sceneState = "init"
 loading = False
 
 ''' SOKOBAN FUNCTION '''
+
+
+def find_position_player(board):
+    for i in range(len(board)):
+        for j in range(len(board[i])):
+            if board[i][j] == 'p':
+                return (i, j)
+    return None
+
+
+def find_path(board):
+    path = []
+    i = 0
+    for i in range(len(board)):
+        path.append(find_position_player(board[i]))
+    return path
+
+
+def move(path):
+    position_player = find_position_player(maps[mapNumber])
+    x = position_player[0]
+    y = position_player[1]
+
+    move_list = []
+    for i in range(len(path)):
+        cur_x = path[i][0]
+        cur_y = path[i][1]
+
+        if cur_x < x:
+            move_list.append("up")
+        elif cur_x > x:
+            move_list.append("down")
+        elif cur_y < y:
+            move_list.append("left")
+        elif cur_y > y:
+            move_list.append("right")
+        x = cur_x
+        y = cur_y
+
+    return move_list
+
+
+def renderMoveList(move_list, max_display_lines, move_list_scroll):
+    move_font = pygame.font.Font('gameFont.ttf', 20)
+    move_text = move_font.render("Move List:", True, WHITE)
+    move_rect = move_text.get_rect(topright=(600, 10))
+    screen.blit(move_text, move_rect)
+
+    move_list_font = pygame.font.Font('gameFont.ttf', 20)
+    move_list_y = 40  # Điểm bắt đầu để hiển thị danh sách di chuyển
+
+    # Tính toán chỉ số cuối cùng mà có thể hiển thị trên màn hình
+    end_index = min(move_list_scroll + max_display_lines, len(move_list))
+
+    for i in range(move_list_scroll, end_index):
+        move = move_list[i]
+        move_text = move_list_font.render(move, True, WHITE)
+        move_rect = move_text.get_rect(topright=(600, move_list_y))
+        screen.blit(move_text, move_rect)
+        move_list_y += 20  # Khoảng cách giữa các mục trong danh sách
+
+    pygame.display.flip()
 
 
 def sokoban():
@@ -132,22 +190,32 @@ def sokoban():
     stateLenght = 0
     currentState = 0
     found = True
-
+    move_list = []
+    # Khởi tạo biến move_list_scroll
+    max_display_lines = 10
     while running:
         screen.blit(init_background, (0, 0))
         if sceneState == "init":
             # Choose map and display
             initGame(maps[mapNumber])
-
         if sceneState == "executing":
+            move_list_scroll = -1
+            path = []
             # Choose map
             list_check_point = check_points[mapNumber]
-            print("AStar")
-            list_board = astar.AStart_Search(
-                maps[mapNumber], list_check_point)
+            if algorithm == "Depth First Search":
+                print("BFS")
+                list_board = DFS.DFS_search(maps[mapNumber], list_check_point)
+            else:
+                print("AStar")
+                list_board = astar.AStar_Search(
+                    maps[mapNumber], list_check_point)
+            path = find_path(list_board[0])
+            move_list = move(path)
             if len(list_board) > 0:
                 sceneState = "playing"
                 stateLenght = len(list_board[0])
+                print(stateLenght)
                 currentState = 0
             else:
                 sceneState = "end"
@@ -166,10 +234,20 @@ def sokoban():
             mapSize = pygame.font.Font('gameFont.ttf', 30)
             mapText = mapSize.render("Lv." + str(mapNumber + 1), True, WHITE)
             mapRect = mapText.get_rect(center=(320, 100))
-
             screen.blit(mapText, mapRect)
+            algorithmSize = pygame.font.Font('gameFont.ttf', 30)
+            algorithmText = algorithmSize.render(str(algorithm), True, WHITE)
+            algorithmRect = algorithmText.get_rect(center=(320, 600))
+            screen.blit(algorithmText, algorithmRect)
+
             clock.tick(2)
             renderMap(list_board[0][currentState])
+            # In danh sách di chuyển lên màn hình
+            if move_list_scroll < len(move_list) - max_display_lines:
+                move_list_scroll += 1
+                renderMoveList(move_list, max_display_lines,
+                               move_list_scroll)
+
             currentState = currentState + 1
             if currentState == stateLenght:
                 sceneState = "end"
@@ -193,7 +271,12 @@ def sokoban():
                         sceneState = "loading"
                     if sceneState == "end":
                         sceneState = "init"
-                    algorithm = "A Star Search"
+                # Press SPACE key board to switch algorithm
+                if event.key == pygame.K_SPACE and sceneState == "init":
+                    if algorithm == "Depth First Search":
+                        algorithm = "A Star Search"
+                    else:
+                        algorithm = "Depth First Search"
         pygame.display.flip()
     pygame.quit()
 
@@ -229,14 +312,9 @@ def initGame(map):
 
 
 def loadingGame():
-    fontLoading_1 = pygame.font.Font('gameFont.ttf', 40)
-    text_1 = fontLoading_1.render('SHHHHHHH!', True, WHITE)
-    text_rect_1 = text_1.get_rect(center=(320, 60))
-    screen.blit(text_1, text_rect_1)
-
     fontLoading_2 = pygame.font.Font('gameFont.ttf', 20)
     text_2 = fontLoading_2.render(
-        'The problem is being solved, stay right there!', True, WHITE)
+        'Loading game', True, WHITE)
     text_rect_2 = text_2.get_rect(center=(320, 100))
     screen.blit(text_2, text_rect_2)
 
@@ -244,7 +322,7 @@ def loadingGame():
 def foundGame(map):
 
     font_1 = pygame.font.Font('gameFont.ttf', 30)
-    text_1 = font_1.render('Yeah! The problem is solved!!!', True, WHITE)
+    text_1 = font_1.render('The problem is solved!!!', True, WHITE)
     text_rect_1 = text_1.get_rect(center=(320, 100))
     screen.blit(text_1, text_rect_1)
 
