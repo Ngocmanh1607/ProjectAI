@@ -219,6 +219,9 @@ def get_next_pos(board, cur_pos):
 
 
 def move(board, next_pos, cur_pos, list_check_point):
+    # The line `new_board = assign_matrix(board)` creates a deep copy of the `board` list. It creates
+    # a new list with the same values as the `board` list, ensuring that any changes made to
+    # `new_board` will not affect the original `board` list.
     new_board = assign_matrix(board)
     if new_board[next_pos[0]][next_pos[1]] == 'b':
         x = 2*next_pos[0] - cur_pos[0]

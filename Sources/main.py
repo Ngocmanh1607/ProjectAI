@@ -5,6 +5,7 @@ import pygame
 from pygame.constants import KEYDOWN
 import astar
 import DFS
+import time
 TIME_OUT = 1800
 
 path_board = os.getcwd() + '/Testcases'
@@ -58,7 +59,6 @@ def get_pair(path):
 
 maps = get_boards()
 check_points = get_check_points()
-
 pygame.init()
 pygame.font.init()
 screen = pygame.display.set_mode((640, 640))
@@ -204,12 +204,20 @@ def sokoban():
             # Choose map
             list_check_point = check_points[mapNumber]
             if algorithm == "Depth First Search":
-                print("BFS")
+                time_start = time.time()
+                print("DFS")
                 list_board = DFS.DFS_search(maps[mapNumber], list_check_point)
+                time_end = time.time()
+                rounded_time = round(time_end - time_start, 3)
+                print("Thời gian thực thi:", rounded_time, "giây")
             else:
+                time_start = time.time()
                 print("AStar")
                 list_board = astar.AStar_Search(
                     maps[mapNumber], list_check_point)
+                time_end = time.time()
+                rounded_time = round(time_end - time_start, 3)
+                print("Thời gian thực thi:", rounded_time, "giây")
             path = find_path(list_board[0])
             move_list = move(path)
             if len(list_board) > 0:
