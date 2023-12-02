@@ -1,5 +1,5 @@
 # ProjectAI
--**Folder Báo cáo: Bao gồm 1 file lý thuyết và ppt trình bày **<br>
+-**Folder Báo cáo: Bao gồm 1 file lý thuyết và ppt trình bày**<br>
 -**Folder code:**<br>
   Bao gồm 4 folder nhỏ :<br>
       Checkpoints : là folder chứa danh sách các điểm mà hộp cần để ở vị trí đó<br>
